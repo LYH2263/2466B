@@ -15,9 +15,11 @@ import predictionRoutes from './routes/prediction.js';
 import importRoutes from './routes/import.js';
 import searchRoutes from './routes/search.js';
 import inventoryPlanRoutes from './routes/inventoryPlans.js';
+import healthRoutes from './routes/health.js';
 import './services/notificationService.js';
 import { cleanExpiredNotifications } from './services/notificationService.js';
 import { processInventoryReminders, updateLastInventoryFromAssetRecord } from './services/inventoryPlanService.js';
+import { recalculateAndSaveHealthScore } from './services/healthScoreService.js';
 import { eventBus, EVENTS } from './services/eventBus.js';
 
 const app = express();
@@ -74,6 +76,7 @@ app.use('/api/prediction', predictionRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/inventory-plans', inventoryPlanRoutes);
+app.use('/api/health', healthRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -140,8 +143,25 @@ app.listen(PORT, async () => {
   eventBus.on(EVENTS.ASSET_RECORD_CREATED, async (data: { userId: string; recordId: string; total: number; date: string }) => {
     try {
       await updateLastInventoryFromAssetRecord(data.userId);
+      await recalculateAndSaveHealthScore(data.userId);
     } catch (error) {
-      console.error('Update last inventory date error:', error);
+      console.error('Update last inventory date and health score error:', error);
+    }
+  });
+
+  eventBus.on(EVENTS.ASSET_RECORD_UPDATED, async (data: { userId: string; recordId: string }) => {
+    try {
+      await recalculateAndSaveHealthScore(data.userId);
+    } catch (error) {
+      console.error('Recalculate health score after update error:', error);
+    }
+  });
+
+  eventBus.on(EVENTS.ASSET_RECORD_DELETED, async (data: { userId: string; recordId: string }) => {
+    try {
+      await recalculateAndSaveHealthScore(data.userId);
+    } catch (error) {
+      console.error('Recalculate health score after delete error:', error);
     }
   });
 

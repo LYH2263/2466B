@@ -442,3 +442,109 @@ export interface InventoryPlanUpdateForm {
   lastInventoryDate?: string | null
 }
 
+export type DataQuality = 'FULL' | 'PARTIAL' | 'LIMITED' | 'INSUFFICIENT'
+
+export interface DimensionScore {
+  score: number
+  weight: number
+  suggestion: string
+}
+
+export interface HealthScoreResult {
+  totalScore: number
+  emergencyReserve: DimensionScore
+  assetAllocation: DimensionScore
+  growthStability: DimensionScore
+  inventoryTimeliness: DimensionScore
+  dataQuality: DataQuality
+  dataQualityNote?: string
+  calculatedAt: string
+}
+
+export interface HealthConfig {
+  id: string
+  userId: string
+  monthlyExpense: number
+  targetCashRatio: number
+  targetLongTermInvestRatio: number
+  targetStableBondRatio: number
+  emergencyReserveWeight: number
+  assetAllocationWeight: number
+  growthStabilityWeight: number
+  inventoryTimelinessWeight: number
+  volatilityWindowMonths: number
+  minEmergencyReserveMonths: number
+  idealEmergencyReserveMonths: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface HealthConfigForm {
+  monthlyExpense: number
+  targetCashRatio: number
+  targetLongTermInvestRatio: number
+  targetStableBondRatio: number
+  emergencyReserveWeight: number
+  assetAllocationWeight: number
+  growthStabilityWeight: number
+  inventoryTimelinessWeight: number
+  volatilityWindowMonths: number
+  minEmergencyReserveMonths: number
+  idealEmergencyReserveMonths: number
+}
+
+export interface HealthScoreHistoryItem {
+  id: string
+  totalScore: number
+  emergencyReserveScore: number
+  assetAllocationScore: number
+  growthStabilityScore: number
+  inventoryTimelinessScore: number
+  calculatedAt: string
+  dataQuality: DataQuality
+}
+
+export interface HealthScoreHistoryResponse {
+  scores: HealthScoreHistoryItem[]
+  total: number
+  hasMore: boolean
+}
+
+export interface HealthConfigResponse {
+  config: HealthConfig | null
+  defaultConfig?: HealthConfigForm
+}
+
+export const HEALTH_DIMENSION_LABELS: Record<string, string> = {
+  emergencyReserve: '应急储备充足度',
+  assetAllocation: '资产配置合理度',
+  growthStability: '增长稳定性',
+  inventoryTimeliness: '盘点及时性',
+}
+
+export const HEALTH_DIMENSION_COLORS: Record<string, string> = {
+  emergencyReserve: '#67c23a',
+  assetAllocation: '#409eff',
+  growthStability: '#e6a23c',
+  inventoryTimeliness: '#f56c6c',
+}
+
+export const SCORE_LEVELS = [
+  { min: 90, max: 100, label: '优秀', color: '#67c23a', description: '财务状况非常健康' },
+  { min: 80, max: 89, label: '良好', color: '#95d475', description: '财务状况良好' },
+  { min: 70, max: 79, label: '中等', color: '#e6a23c', description: '财务状况一般，有改进空间' },
+  { min: 60, max: 69, label: '及格', color: '#f56c6c', description: '财务状况需要关注' },
+  { min: 0, max: 59, label: '较差', color: '#f56c6c', description: '财务状况较差，急需改进' },
+]
+
+export function getScoreLevel(score: number) {
+  return SCORE_LEVELS.find((level) => score >= level.min && score <= level.max) || SCORE_LEVELS[SCORE_LEVELS.length - 1]
+}
+
+export const DATA_QUALITY_LABELS: Record<DataQuality, { label: string; color: string }> = {
+  FULL: { label: '数据充足', color: '#67c23a' },
+  PARTIAL: { label: '部分数据', color: '#e6a23c' },
+  LIMITED: { label: '数据有限', color: '#f56c6c' },
+  INSUFFICIENT: { label: '数据不足', color: '#909399' },
+}
+

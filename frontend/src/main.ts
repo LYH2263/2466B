@@ -10,6 +10,7 @@ import Transactions from './views/Transactions.vue'
 import Report from './views/Report.vue'
 import AdminPanel from './views/AdminPanel.vue'
 import InventoryPlan from './views/InventoryPlan.vue'
+import HealthScore from './views/HealthScore.vue'
 import { useAuth } from './composables/useAuth'
 
 const requireAuth = async (_to: any, _from: any, next: any) => {
@@ -83,6 +84,11 @@ const routes = [
   {
     path: '/inventory-plan',
     component: InventoryPlan,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/health-score',
+    component: HealthScore,
     beforeEnter: requireAuth
   }
 ]

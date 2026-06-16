@@ -25,6 +25,8 @@ model User {
   inventoryPlan     InventoryPlan?
   adminAuditLogs    AuditLog[]  @relation("AdminAuditLogs")
   targetAuditLogs   AuditLog[]  @relation("TargetAuditLogs")
+  healthConfig      HealthConfig?
+  healthScores      HealthScore[]
 
   @@map("users")
 }
@@ -174,4 +176,61 @@ model AuditLog {
   @@index([targetUserId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+enum HealthDimension {
+  EMERGENCY_RESERVE
+  ASSET_ALLOCATION
+  GROWTH_STABILITY
+  INVENTORY_TIMELINESS
+}
+
+model HealthConfig {
+  id                          String   @id @default(uuid())
+  userId                      String   @unique @map("user_id")
+  monthlyExpense              Decimal  @map("monthly_expense") @db.Decimal(15, 2)
+  targetCashRatio             Decimal  @map("target_cash_ratio") @db.Decimal(5, 4)
+  targetLongTermInvestRatio   Decimal  @map("target_long_term_invest_ratio") @db.Decimal(5, 4)
+  targetStableBondRatio       Decimal  @map("target_stable_bond_ratio") @db.Decimal(5, 4)
+  emergencyReserveWeight      Decimal  @map("emergency_reserve_weight") @db.Decimal(5, 4)
+  assetAllocationWeight       Decimal  @map("asset_allocation_weight") @db.Decimal(5, 4)
+  growthStabilityWeight       Decimal  @map("growth_stability_weight") @db.Decimal(5, 4)
+  inventoryTimelinessWeight   Decimal  @map("inventory_timeliness_weight") @db.Decimal(5, 4)
+  volatilityWindowMonths      Int      @map("volatility_window_months") @default(6)
+  minEmergencyReserveMonths   Int      @map("min_emergency_reserve_months") @default(3)
+  idealEmergencyReserveMonths Int      @map("ideal_emergency_reserve_months") @default(6)
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
+
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_configs")
+}
+
+model HealthScore {
+  id                          String   @id @default(uuid())
+  userId                      String   @map("user_id")
+  totalScore                  Decimal  @map("total_score") @db.Decimal(5, 2)
+  emergencyReserveScore       Decimal  @map("emergency_reserve_score") @db.Decimal(5, 2)
+  assetAllocationScore        Decimal  @map("asset_allocation_score") @db.Decimal(5, 2)
+  growthStabilityScore        Decimal  @map("growth_stability_score") @db.Decimal(5, 2)
+  inventoryTimelinessScore    Decimal  @map("inventory_timeliness_score") @db.Decimal(5, 2)
+  emergencyReserveWeight      Decimal  @map("emergency_reserve_weight") @db.Decimal(5, 4)
+  assetAllocationWeight       Decimal  @map("asset_allocation_weight") @db.Decimal(5, 4)
+  growthStabilityWeight       Decimal  @map("growth_stability_weight") @db.Decimal(5, 4)
+  inventoryTimelinessWeight   Decimal  @map("inventory_timeliness_weight") @db.Decimal(5, 4)
+  emergencyReserveSuggestion  String   @map("emergency_reserve_suggestion") @db.VarChar(500)
+  assetAllocationSuggestion   String   @map("asset_allocation_suggestion") @db.VarChar(500)
+  growthStabilitySuggestion   String   @map("growth_stability_suggestion") @db.VarChar(500)
+  inventoryTimelinessSuggestion String  @map("inventory_timeliness_suggestion") @db.VarChar(500)
+  dataQuality                 String   @map("data_quality") @db.VarChar(20)
+  dataQualityNote             String?  @map("data_quality_note") @db.VarChar(500)
+  calculatedAt                DateTime @map("calculated_at")
+  createdAt                   DateTime @default(now()) @map("created_at")
+
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, calculatedAt])
+  @@map("health_scores")
 }

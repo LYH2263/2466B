@@ -114,6 +114,11 @@ router.delete('/:id', authMiddleware, async (req: any, res) => {
       where: { id }
     });
 
+    eventBus.emit(EVENTS.ASSET_RECORD_DELETED, {
+      userId: req.userId,
+      recordId: id,
+    }).catch(console.error);
+
     res.json({ message: '删除成功' });
   } catch (error) {
     console.error('Delete asset error:', error);

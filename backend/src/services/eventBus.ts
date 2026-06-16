@@ -50,5 +50,7 @@ export const EVENTS = {
   ADMIN_FORCE_LOGOUT: 'admin:force-logout',
   ADMIN_CHANGED_ROLE: 'admin:changed-role',
   ASSET_RECORD_CREATED: 'asset:record-created',
+  ASSET_RECORD_UPDATED: 'asset:record-updated',
+  ASSET_RECORD_DELETED: 'asset:record-deleted',
   SYSTEM_NOTICE: 'system:notice',
 } as const;
