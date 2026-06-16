@@ -1,9 +1,32 @@
 <template>
   <router-view />
+  <CommandPalette ref="commandPaletteRef" />
 </template>
 
 <script setup lang="ts">
-// App.vue serves as router-view container
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import CommandPalette from './components/CommandPalette.vue'
+import { useCommandPaletteInit } from './composables/useCommandPaletteInit'
+import { useAuth } from './composables/useAuth'
+
+const commandPaletteRef = ref<InstanceType<typeof CommandPalette> | null>(null)
+const { initCommandPalette, registerPages, registerActions } = useCommandPaletteInit()
+const { isLoggedIn } = useAuth()
+const router = useRouter()
+
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    registerPages()
+    registerActions()
+  }
+})
+
+initCommandPalette()
+
+defineExpose({
+  commandPaletteRef,
+})
 </script>
 
 <style>
