@@ -21,6 +21,7 @@ model User {
   assetRecords      AssetRecord[]
   transactions      Transaction[]
   refreshTokens     RefreshToken[]
+  notifications     Notification[]
   adminAuditLogs    AuditLog[]  @relation("AdminAuditLogs")
   targetAuditLogs   AuditLog[]  @relation("TargetAuditLogs")
 
@@ -89,6 +90,36 @@ model Transaction {
   @@index([userId, direction])
   @@index([userId, category])
   @@map("transactions")
+}
+
+enum NotificationType {
+  ACCOUNT_LOCKED
+  NEW_DEVICE_LOGIN
+  ASSET_TARGET_REACHED
+  INVENTORY_REMINDER
+  SYSTEM_NOTICE
+  ADMIN_ACTION
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  content   String           @db.Text
+  data      String?          @db.Text
+  read      Boolean          @default(false)
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+  expiresAt DateTime?        @map("expires_at")
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("notifications")
 }
 
 enum AuditAction {

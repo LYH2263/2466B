@@ -10,6 +10,9 @@ import assetRoutes from './routes/assets.js';
 import transactionRoutes from './routes/transactions.js';
 import reportRoutes from './routes/reports.js';
 import adminRoutes from './routes/admin.js';
+import notificationRoutes from './routes/notifications.js';
+import './services/notificationService.js';
+import { cleanExpiredNotifications } from './services/notificationService.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -60,6 +63,7 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -98,6 +102,20 @@ async function autoSeed() {
 app.listen(PORT, async () => {
   console.log(`Backend server running on port ${PORT}`);
   await autoSeed();
+
+  const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+  setInterval(async () => {
+    try {
+      const count = await cleanExpiredNotifications();
+      if (count > 0) {
+        console.log(`Cleaned up ${count} expired notifications`);
+      }
+    } catch (error) {
+      console.error('Notification cleanup error:', error);
+    }
+  }, CLEANUP_INTERVAL_MS);
+
+  cleanExpiredNotifications().catch(console.error);
 });
 
 export { prisma };

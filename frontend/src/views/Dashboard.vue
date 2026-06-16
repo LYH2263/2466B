@@ -40,6 +40,7 @@
         </div>
         
         <div class="header-actions">
+          <NotificationCenter />
           <div v-if="user" class="user-info">
             <el-tag v-if="user.role === 'admin'" type="danger" size="small" effect="dark">管理员</el-tag>
             <span>{{ user.email }}</span>
@@ -131,6 +132,7 @@ import AssetSummary from '../components/AssetSummary.vue'
 import AssetForm from '../components/AssetForm.vue'
 import AssetChart from '../components/AssetChart.vue'
 import AssetList from '../components/AssetList.vue'
+import NotificationCenter from '../components/NotificationCenter.vue'
 
 const router = useRouter()
 const { records, latestRecord, chartData, hasRecords, loading, error, fetchRecords, addRecord, deleteRecord, fillDemoData } = useAssets()

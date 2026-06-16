@@ -219,3 +219,30 @@ export interface AuditLogResponse {
   logs: AuditLog[]
   pagination: AdminPagination
 }
+
+export type NotificationType = 'ACCOUNT_LOCKED' | 'NEW_DEVICE_LOGIN' | 'ASSET_TARGET_REACHED' | 'INVENTORY_REMINDER' | 'SYSTEM_NOTICE' | 'ADMIN_ACTION'
+
+export interface Notification {
+  id: string
+  userId: string
+  type: NotificationType
+  title: string
+  content: string
+  data: Record<string, any> | null
+  read: boolean
+  readAt: string | null
+  createdAt: string
+  expiresAt: string | null
+}
+
+export interface NotificationPagination {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface NotificationListResponse {
+  notifications: Notification[]
+  pagination: NotificationPagination
+}

@@ -4,12 +4,37 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../index.js';
 import crypto from 'crypto';
+import { eventBus, EVENTS } from '../services/eventBus.js';
+import { checkInventoryReminder } from '../services/notificationService.js';
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ACCESS_TOKEN_EXPIRES = '15m';
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
+
+function parseUserAgent(userAgent: string): string {
+  if (!userAgent) return '未知设备';
+  
+  const ua = userAgent.toLowerCase();
+  
+  let device = '';
+  if (ua.includes('windows')) device = 'Windows';
+  else if (ua.includes('mac os')) device = 'macOS';
+  else if (ua.includes('android')) device = 'Android';
+  else if (ua.includes('iphone') || ua.includes('ipad')) device = 'iOS';
+  else if (ua.includes('linux')) device = 'Linux';
+  else device = '未知系统';
+  
+  let browser = '';
+  if (ua.includes('edg')) browser = 'Edge';
+  else if (ua.includes('chrome')) browser = 'Chrome';
+  else if (ua.includes('firefox')) browser = 'Firefox';
+  else if (ua.includes('safari')) browser = 'Safari';
+  else browser = '未知浏览器';
+  
+  return `${device} · ${browser}`;
+}
 
 // Validation schemas
 const loginSchema = z.object({
@@ -117,6 +142,13 @@ router.post('/login', async (req, res) => {
             lockedUntil: new Date(Date.now() + 15 * 60 * 1000)
           }
         });
+
+        eventBus.emit(EVENTS.ACCOUNT_LOCKED, {
+          userId: user.id,
+          reason: '连续登录失败5次',
+          lockMinutes: 15,
+        }).catch(console.error);
+
         return res.status(403).json({ 
           error: '连续登录失败5次，账号已被锁定15分钟' 
         });
@@ -144,6 +176,23 @@ router.post('/login', async (req, res) => {
     const refreshToken = generateRefreshToken();
     const refreshTokenHash = hashToken(refreshToken);
 
+    const userAgent = req.headers['user-agent'] || '';
+    const ip = (req.ip || req.headers['x-forwarded-for'] || '').toString();
+
+    const recentLogins = await prisma.refreshToken.findMany({
+      where: {
+        userId: user.id,
+        revokedAt: null,
+        createdAt: {
+          gt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        },
+      },
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const isNewDevice = recentLogins.length === 0;
+
     // Store refresh token
     await prisma.refreshToken.create({
       data: {
@@ -152,6 +201,18 @@ router.post('/login', async (req, res) => {
         expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000)
       }
     });
+
+    if (isNewDevice) {
+      eventBus.emit(EVENTS.NEW_DEVICE_LOGIN, {
+        userId: user.id,
+        ip,
+        userAgent,
+        device: parseUserAgent(userAgent),
+        loginTime: new Date(),
+      }).catch(console.error);
+    }
+
+    checkInventoryReminder(user.id).catch(console.error);
 
     // Set refresh token cookie
     res.cookie('refreshToken', refreshToken, {

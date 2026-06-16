@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import type { AssetRecord, AssetFormData } from '../types'
+import { useNotifications } from './useNotifications'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
@@ -57,6 +58,7 @@ export function useAssets() {
   const records = ref<AssetRecord[]>([])
   const loading = ref(false)
   const error = ref('')
+  const { fetchUnreadCount: refreshNotificationCount } = useNotifications()
 
   const fetchRecords = async () => {
     loading.value = true
@@ -83,6 +85,7 @@ export function useAssets() {
     try {
       await api.post('/api/assets', formData)
       await fetchRecords()
+      refreshNotificationCount()
       return { success: true }
     } catch (err: any) {
       const message = err.response?.data?.error || '添加失败'
@@ -113,6 +116,7 @@ export function useAssets() {
       await api.post('/api/assets', data)
     }
     await fetchRecords()
+    refreshNotificationCount()
   }
 
   // Computed

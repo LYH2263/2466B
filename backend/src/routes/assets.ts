@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../index.js';
 import jwt from 'jsonwebtoken';
+import { eventBus, EVENTS } from '../services/eventBus.js';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -71,6 +72,13 @@ router.post('/', authMiddleware, async (req: any, res) => {
         note: data.note
       }
     });
+
+    eventBus.emit(EVENTS.ASSET_RECORD_CREATED, {
+      userId: req.userId,
+      recordId: record.id,
+      total: total,
+      date: data.date,
+    }).catch(console.error);
 
     res.status(201).json({ 
       message: '添加成功',

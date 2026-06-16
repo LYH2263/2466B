@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../index.js';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.js';
+import { eventBus, EVENTS } from '../services/eventBus.js';
 
 const router = Router();
 
@@ -170,6 +171,11 @@ router.patch('/users/:id/enable', async (req: any, res) => {
       }
     });
 
+    eventBus.emit(EVENTS.ADMIN_ENABLED_USER, {
+      targetUserId: targetUser.id,
+      adminEmail: admin!.email,
+    }).catch(console.error);
+
     res.json({ message: '用户已启用', user });
   } catch (error) {
     console.error('Enable user error:', error);
@@ -229,6 +235,11 @@ router.patch('/users/:id/disable', async (req: any, res) => {
       }
     });
 
+    eventBus.emit(EVENTS.ADMIN_DISABLED_USER, {
+      targetUserId: targetUser.id,
+      adminEmail: admin!.email,
+    }).catch(console.error);
+
     res.json({ message: '用户已禁用', user });
   } catch (error) {
     console.error('Disable user error:', error);
@@ -274,6 +285,11 @@ router.patch('/users/:id/unlock', async (req: any, res) => {
         detail: `管理员重置了用户登录失败锁定状态`
       }
     });
+
+    eventBus.emit(EVENTS.ADMIN_UNLOCKED_USER, {
+      targetUserId: targetUser.id,
+      adminEmail: admin!.email,
+    }).catch(console.error);
 
     res.json({ message: '用户已解锁', user });
   } catch (error) {
@@ -331,6 +347,13 @@ router.patch('/users/:id/role', async (req: any, res) => {
       }
     });
 
+    eventBus.emit(EVENTS.ADMIN_CHANGED_ROLE, {
+      targetUserId: targetUser.id,
+      adminEmail: admin!.email,
+      oldRole,
+      newRole: role,
+    }).catch(console.error);
+
     res.json({ message: '角色已更新', user });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -371,6 +394,12 @@ router.post('/users/:id/force-logout', async (req: any, res) => {
         detail: `管理员强制下线用户，共吊销 ${result.count} 个 Refresh Token`
       }
     });
+
+    eventBus.emit(EVENTS.ADMIN_FORCE_LOGOUT, {
+      targetUserId: targetUser.id,
+      adminEmail: admin!.email,
+      revokedCount: result.count,
+    }).catch(console.error);
 
     res.json({ message: `已强制下线，吊销 ${result.count} 个活跃会话` });
   } catch (error) {
