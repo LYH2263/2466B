@@ -14,8 +14,11 @@ import notificationRoutes from './routes/notifications.js';
 import predictionRoutes from './routes/prediction.js';
 import importRoutes from './routes/import.js';
 import searchRoutes from './routes/search.js';
+import inventoryPlanRoutes from './routes/inventoryPlans.js';
 import './services/notificationService.js';
 import { cleanExpiredNotifications } from './services/notificationService.js';
+import { processInventoryReminders, updateLastInventoryFromAssetRecord } from './services/inventoryPlanService.js';
+import { eventBus, EVENTS } from './services/eventBus.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -70,6 +73,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/inventory-plans', inventoryPlanRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -121,7 +125,28 @@ app.listen(PORT, async () => {
     }
   }, CLEANUP_INTERVAL_MS);
 
+  const REMINDER_INTERVAL_MS = 60 * 60 * 1000;
+  setInterval(async () => {
+    try {
+      const count = await processInventoryReminders();
+      if (count > 0) {
+        console.log(`Sent ${count} inventory reminder notifications`);
+      }
+    } catch (error) {
+      console.error('Inventory reminder error:', error);
+    }
+  }, REMINDER_INTERVAL_MS);
+
+  eventBus.on(EVENTS.ASSET_RECORD_CREATED, async (data: { userId: string; recordId: string; total: number; date: string }) => {
+    try {
+      await updateLastInventoryFromAssetRecord(data.userId);
+    } catch (error) {
+      console.error('Update last inventory date error:', error);
+    }
+  });
+
   cleanExpiredNotifications().catch(console.error);
+  processInventoryReminders().catch(console.error);
 });
 
 export { prisma };

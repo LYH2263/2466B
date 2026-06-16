@@ -9,6 +9,7 @@ import Dashboard from './views/Dashboard.vue'
 import Transactions from './views/Transactions.vue'
 import Report from './views/Report.vue'
 import AdminPanel from './views/AdminPanel.vue'
+import InventoryPlan from './views/InventoryPlan.vue'
 import { useAuth } from './composables/useAuth'
 
 const requireAuth = async (_to: any, _from: any, next: any) => {
@@ -78,6 +79,11 @@ const routes = [
     path: '/admin',
     component: AdminPanel,
     beforeEnter: requireAdmin
+  },
+  {
+    path: '/inventory-plan',
+    component: InventoryPlan,
+    beforeEnter: requireAuth
   }
 ]
 

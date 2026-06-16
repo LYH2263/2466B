@@ -28,6 +28,14 @@
             资产报告
           </el-button>
           <el-button
+            type="primary"
+            plain
+            :icon="Calendar"
+            @click="goToInventoryPlan"
+          >
+            盘点计划
+          </el-button>
+          <el-button
             v-if="isAdmin"
             type="warning"
             plain
@@ -98,6 +106,15 @@
       </div>
 
       <template v-else>
+        <InventoryStatusCard
+          :status="inventoryStatus"
+          :plan="inventoryPlan"
+          :loading="inventoryLoading"
+          @edit="goToInventoryPlan"
+          @refresh="fetchInventoryPlan"
+          @sync-last="handleSyncLastInventory"
+        />
+
         <AssetSummary :latest-record="latestRecord" />
 
         <AssetForm
@@ -142,10 +159,11 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting, UploadFilled } from '@element-plus/icons-vue'
+import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting, UploadFilled, Calendar } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
 import { useAuth } from '../composables/useAuth'
 import { usePrediction } from '../composables/usePrediction'
+import { useInventoryPlans } from '../composables/useInventoryPlans'
 import type { AssetFormData, PredictionAlgorithm } from '../types'
 import axios from 'axios'
 import AssetSummary from '../components/AssetSummary.vue'
@@ -155,10 +173,12 @@ import AssetList from '../components/AssetList.vue'
 import NotificationCenter from '../components/NotificationCenter.vue'
 import PredictionPanel from '../components/PredictionPanel.vue'
 import ImportWizard from '../components/ImportWizard.vue'
+import InventoryStatusCard from '../components/InventoryStatusCard.vue'
 
 const router = useRouter()
 const { records, latestRecord, chartData, hasRecords, loading, error, fetchRecords, addRecord, deleteRecord, fillDemoData } = useAssets()
 const { currentUser: authUser, isAdmin, fetchCurrentUser, clearUser } = useAuth()
+const { plan: inventoryPlan, status: inventoryStatus, loading: inventoryLoading, fetchPlan: fetchInventoryPlan, syncLastInventory } = useInventoryPlans()
 
 const user = ref<{ id: string; email: string; role?: string } | null>(null)
 const showImportWizard = ref(false)
@@ -188,6 +208,7 @@ const handleSubmit = async (formData: AssetFormData) => {
   const result = await addRecord(formData)
   if (result.success) {
     ElMessage.success('添加成功')
+    await fetchInventoryPlan()
   } else {
     ElMessage.error(result.error || '添加失败')
   }
@@ -247,8 +268,21 @@ const goToReports = () => {
   router.push('/reports')
 }
 
+const goToInventoryPlan = () => {
+  router.push('/inventory-plan')
+}
+
 const goToAdmin = () => {
   router.push('/admin')
+}
+
+const handleSyncLastInventory = async () => {
+  try {
+    await syncLastInventory()
+    ElMessage.success('已同步最新盘点日期')
+  } catch (err: any) {
+    ElMessage.error(err.message || '同步失败')
+  }
 }
 
 const handleLogout = async () => {
@@ -286,6 +320,7 @@ const handleChangeTarget = (t: number | undefined) => {
 
 const handleImportComplete = async () => {
   await fetchRecords()
+  await fetchInventoryPlan()
   ElMessage.success('导入完成，数据已刷新')
 }
 
@@ -302,6 +337,7 @@ watch(
 onMounted(() => {
   fetchUser()
   fetchRecords()
+  fetchInventoryPlan()
 })
 </script>
 

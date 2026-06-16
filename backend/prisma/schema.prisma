@@ -22,6 +22,7 @@ model User {
   transactions      Transaction[]
   refreshTokens     RefreshToken[]
   notifications     Notification[]
+  inventoryPlan     InventoryPlan?
   adminAuditLogs    AuditLog[]  @relation("AdminAuditLogs")
   targetAuditLogs   AuditLog[]  @relation("TargetAuditLogs")
 
@@ -120,6 +121,32 @@ model Notification {
   @@index([userId, createdAt])
   @@index([expiresAt])
   @@map("notifications")
+}
+
+enum InventoryCycleType {
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+model InventoryPlan {
+  id                String              @id @default(uuid())
+  userId            String              @unique @map("user_id")
+  cycleType         InventoryCycleType  @default(MONTHLY) @map("cycle_type")
+  customIntervalDays Int?               @map("custom_interval_days")
+  weeklyDayOfWeek   Int?                @map("weekly_day_of_week")
+  monthlyDayOfMonth Int?                @map("monthly_day_of_month")
+  reminderDaysBefore Int               @default(3) @map("reminder_days_before")
+  reminderEnabled   Boolean             @default(true) @map("reminder_enabled")
+  skipHolidays      Boolean             @default(false) @map("skip_holidays")
+  lastInventoryDate DateTime?           @map("last_inventory_date")
+  lastNotifiedDate  DateTime?           @map("last_notified_date")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_plans")
 }
 
 enum AuditAction {

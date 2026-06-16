@@ -382,3 +382,63 @@ export const ASSET_FIELD_LABELS: Record<AssetFieldKey, string> = {
 
 export const ASSET_FIELD_REQUIRED: AssetFieldKey[] = ['date', 'cash', 'longTermInvest', 'stableBond']
 
+export type InventoryCycleType = 'WEEKLY' | 'MONTHLY' | 'CUSTOM'
+
+export interface InventoryPlan {
+  id: string
+  userId: string
+  cycleType: InventoryCycleType
+  customIntervalDays: number | null
+  weeklyDayOfWeek: number | null
+  monthlyDayOfMonth: number | null
+  reminderDaysBefore: number
+  reminderEnabled: boolean
+  skipHolidays: boolean
+  lastInventoryDate: string | null
+  lastNotifiedDate: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface InventoryStatus {
+  nextInventoryDate: string | null
+  daysUntilNext: number | null
+  isOverdue: boolean
+  overdueDays: number | null
+  reminderDue: boolean
+  reminderDaysBefore: number
+  hasPlan: boolean
+  hasEverInventory: boolean
+  cycleType: InventoryCycleType | null
+  cycleDescription: string | null
+  adjustedForHoliday: boolean
+  originalDate: string | null
+}
+
+export interface InventoryPlanWithStatus {
+  plan: InventoryPlan | null
+  status: InventoryStatus
+}
+
+export interface InventoryPlanCreateForm {
+  cycleType: InventoryCycleType
+  customIntervalDays?: number
+  weeklyDayOfWeek?: number
+  monthlyDayOfMonth?: number
+  reminderDaysBefore?: number
+  reminderEnabled?: boolean
+  skipHolidays?: boolean
+  lastInventoryDate?: string
+}
+
+export interface InventoryPlanUpdateForm {
+  cycleType?: InventoryCycleType
+  customIntervalDays?: number | null
+  weeklyDayOfWeek?: number | null
+  monthlyDayOfMonth?: number | null
+  reminderDaysBefore?: number
+  reminderEnabled?: boolean
+  skipHolidays?: boolean
+  lastInventoryDate?: string | null
+}
+
