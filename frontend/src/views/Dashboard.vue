@@ -20,6 +20,14 @@
           >
             交易流水
           </el-button>
+          <el-button
+            type="primary"
+            plain
+            :icon="Document"
+            @click="goToReports"
+          >
+            资产报告
+          </el-button>
         </div>
         
         <div class="header-actions">
@@ -104,7 +112,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List } from '@element-plus/icons-vue'
+import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
 import type { AssetFormData } from '../types'
 import axios from 'axios'
@@ -193,6 +201,10 @@ const handleClearAll = async () => {
 
 const goToTransactions = () => {
   router.push('/transactions')
+}
+
+const goToReports = () => {
+  router.push('/reports')
 }
 
 const handleLogout = async () => {

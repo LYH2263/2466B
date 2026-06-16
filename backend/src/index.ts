@@ -8,6 +8,7 @@ import bcrypt from 'bcrypt';
 import authRoutes from './routes/auth.js';
 import assetRoutes from './routes/assets.js';
 import transactionRoutes from './routes/transactions.js';
+import reportRoutes from './routes/reports.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -56,6 +57,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

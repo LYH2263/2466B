@@ -89,3 +89,84 @@ export interface AssetComparison {
   assetEnd: number | null
   assetGrowth: number | null
 }
+
+export type ReportPeriod = 'monthly' | 'yearly'
+
+export interface AvailablePeriods {
+  hasData: boolean
+  years: number[]
+  monthly: { year: number; month: number }[]
+}
+
+export interface CategoryChange {
+  category: AssetCategory
+  categoryName: string
+  start: number
+  end: number
+  change: number
+  changePercent: number
+}
+
+export interface AllocationItem {
+  category: AssetCategory
+  categoryName: string
+  value: number
+  percent: number
+}
+
+export interface ReportSummary {
+  startAsset: number
+  endAsset: number
+  netGrowth: number
+  returnRate: number
+  text: string
+}
+
+export interface TxSummary {
+  income: number
+  expense: number
+  netFlow: number
+  transfer: number
+  count: number
+}
+
+export interface ReportTx {
+  id: string
+  date: string
+  amount: number
+  direction: TransactionDirection
+  category: AssetCategory
+  counterparty: string
+  note: string
+}
+
+export interface TimelinePoint {
+  date: string
+  cash: number
+  longTermInvest: number
+  stableBond: number
+  total: number
+}
+
+export interface ReportData {
+  period: ReportPeriod
+  year: number
+  month?: number
+  periodLabel: string
+  hasData: boolean
+  message?: string
+  summary: ReportSummary | null
+  categoryChanges: CategoryChange[] | null
+  allocation: AllocationItem[] | null
+  transactions: {
+    summary: TxSummary
+    recent: ReportTx[]
+  } | null
+  timeline: TimelinePoint[]
+}
+
+export interface ReportQuery {
+  period: ReportPeriod
+  year: number
+  month?: number
+}

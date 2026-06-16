@@ -7,6 +7,7 @@ import App from './App.vue'
 import Login from './views/Login.vue'
 import Dashboard from './views/Dashboard.vue'
 import Transactions from './views/Transactions.vue'
+import Report from './views/Report.vue'
 
 // Route guard
 const requireAuth = (to: any, from: any, next: any) => {
@@ -41,6 +42,11 @@ const routes = [
   {
     path: '/transactions',
     component: Transactions,
+    beforeEnter: requireAuth
+  },
+  {
+    path: '/reports',
+    component: Report,
     beforeEnter: requireAuth
   }
 ]
