@@ -12,6 +12,7 @@ import reportRoutes from './routes/reports.js';
 import adminRoutes from './routes/admin.js';
 import notificationRoutes from './routes/notifications.js';
 import predictionRoutes from './routes/prediction.js';
+import importRoutes from './routes/import.js';
 import './services/notificationService.js';
 import { cleanExpiredNotifications } from './services/notificationService.js';
 
@@ -66,6 +67,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/prediction', predictionRoutes);
+app.use('/api/import', importRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

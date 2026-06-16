@@ -285,3 +285,100 @@ export interface PredictionParams {
   monthsAhead: number
   targetAmount?: number
 }
+
+export type AssetFieldKey = 'date' | 'cash' | 'longTermInvest' | 'stableBond' | 'note'
+
+export interface ColumnMapping {
+  [key: string]: AssetFieldKey | null
+}
+
+export interface MappedAssetRow {
+  rowIndex: number
+  rawData: Record<string, string>
+  date: string
+  cash: string
+  longTermInvest: string
+  stableBond: string
+  note: string
+}
+
+export type DuplicateStrategy = 'error' | 'skip' | 'overwrite'
+
+export interface ValidationError {
+  rowIndex: number
+  field: string
+  message: string
+  code: string
+}
+
+export interface ParsedAssetData {
+  date: string
+  cash: number
+  longTermInvest: number
+  stableBond: number
+  note: string
+}
+
+export interface ValidatedRow {
+  rowIndex: number
+  isValid: boolean
+  data: ParsedAssetData
+  errors: ValidationError[]
+  warnings: ValidationError[]
+}
+
+export interface ParseCsvResponse {
+  fileName: string
+  fileSize: number
+  encoding: string
+  delimiter: string
+  headers: string[]
+  previewRows: string[][]
+  totalRows: number
+  suggestedMapping: ColumnMapping
+}
+
+export interface BatchValidateResponse {
+  totalCount: number
+  validCount: number
+  invalidCount: number
+  warningCount: number
+  rows: ValidatedRow[]
+}
+
+export interface ImportSuccessDetail {
+  rowIndex: number
+  date: string
+  recordId: string
+  created: boolean
+  overwritten: boolean
+}
+
+export interface ImportFailDetail {
+  rowIndex: number
+  errors: { field: string; message: string; code: string }[]
+}
+
+export interface BatchImportResponse {
+  importId: string
+  totalCount: number
+  successCount: number
+  failCount: number
+  skippedCount: number
+  successDetails: ImportSuccessDetail[]
+  failDetails: ImportFailDetail[]
+  createdAt: string
+}
+
+export type ImportWizardStep = 'upload' | 'preview' | 'mapping' | 'validate' | 'result'
+
+export const ASSET_FIELD_LABELS: Record<AssetFieldKey, string> = {
+  date: '日期',
+  cash: '活钱',
+  longTermInvest: '长期投资',
+  stableBond: '稳定债券',
+  note: '备注',
+}
+
+export const ASSET_FIELD_REQUIRED: AssetFieldKey[] = ['date', 'cash', 'longTermInvest', 'stableBond']
+

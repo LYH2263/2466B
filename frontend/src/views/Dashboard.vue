@@ -53,6 +53,13 @@
             </el-button>
           </div>
           <el-button
+            type="success"
+            :icon="UploadFilled"
+            @click="showImportWizard = true"
+          >
+            批量导入
+          </el-button>
+          <el-button
             v-if="!hasRecords"
             type="primary"
             :icon="DataLine"
@@ -123,6 +130,11 @@
         />
       </template>
     </main>
+
+    <ImportWizard
+      v-model="showImportWizard"
+      @import-complete="handleImportComplete"
+    />
   </div>
 </template>
 
@@ -130,7 +142,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting } from '@element-plus/icons-vue'
+import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting, UploadFilled } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
 import { useAuth } from '../composables/useAuth'
 import { usePrediction } from '../composables/usePrediction'
@@ -142,12 +154,14 @@ import AssetChart from '../components/AssetChart.vue'
 import AssetList from '../components/AssetList.vue'
 import NotificationCenter from '../components/NotificationCenter.vue'
 import PredictionPanel from '../components/PredictionPanel.vue'
+import ImportWizard from '../components/ImportWizard.vue'
 
 const router = useRouter()
 const { records, latestRecord, chartData, hasRecords, loading, error, fetchRecords, addRecord, deleteRecord, fillDemoData } = useAssets()
 const { currentUser: authUser, isAdmin, fetchCurrentUser, clearUser } = useAuth()
 
 const user = ref<{ id: string; email: string; role?: string } | null>(null)
+const showImportWizard = ref(false)
 
 const {
   params: predictionParams,
@@ -268,6 +282,11 @@ const handleChangeMonths = (m: number) => {
 
 const handleChangeTarget = (t: number | undefined) => {
   setTargetAmount(t)
+}
+
+const handleImportComplete = async () => {
+  await fetchRecords()
+  ElMessage.success('导入完成，数据已刷新')
 }
 
 watch(
