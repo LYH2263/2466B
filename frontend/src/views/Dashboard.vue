@@ -10,6 +10,17 @@
             <p>个人资产管理工具</p>
           </div>
         </div>
+
+        <div class="header-nav">
+          <el-button
+            type="primary"
+            plain
+            :icon="List"
+            @click="goToTransactions"
+          >
+            交易流水
+          </el-button>
+        </div>
         
         <div class="header-actions">
           <div v-if="user" class="user-info">
@@ -93,7 +104,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WalletFilled, DataLine, DeleteFilled, SwitchButton } from '@element-plus/icons-vue'
+import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
 import type { AssetFormData } from '../types'
 import axios from 'axios'
@@ -180,6 +191,10 @@ const handleClearAll = async () => {
   }
 }
 
+const goToTransactions = () => {
+  router.push('/transactions')
+}
+
 const handleLogout = async () => {
   try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
@@ -252,6 +267,12 @@ body {
   font-size: 14px;
   opacity: 0.9;
   margin: 4px 0 0 0;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header-actions {

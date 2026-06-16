@@ -18,6 +18,7 @@ model User {
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   assetRecords      AssetRecord[]
+  transactions      Transaction[]
   refreshTokens     RefreshToken[]
 
   @@map("users")
@@ -52,4 +53,37 @@ model AssetRecord {
 
   @@index([userId])
   @@map("asset_records")
+}
+
+enum TransactionDirection {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum AssetCategory {
+  CASH
+  LONG_TERM_INVEST
+  STABLE_BOND
+}
+
+model Transaction {
+  id          String               @id @default(uuid())
+  userId      String               @map("user_id")
+  date        DateTime             @db.Date
+  amount      Decimal              @db.Decimal(15, 2)
+  direction   TransactionDirection
+  category    AssetCategory
+  counterparty String              @db.VarChar(100)
+  note        String?              @db.VarChar(200)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@index([userId, direction])
+  @@index([userId, category])
+  @@map("transactions")
 }
