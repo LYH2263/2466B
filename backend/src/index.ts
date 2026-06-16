@@ -16,6 +16,7 @@ import importRoutes from './routes/import.js';
 import searchRoutes from './routes/search.js';
 import inventoryPlanRoutes from './routes/inventoryPlans.js';
 import healthRoutes from './routes/health.js';
+import dashboardRoutes from './routes/dashboard.js';
 import './services/notificationService.js';
 import { cleanExpiredNotifications } from './services/notificationService.js';
 import { processInventoryReminders, updateLastInventoryFromAssetRecord } from './services/inventoryPlanService.js';
@@ -77,6 +78,7 @@ app.use('/api/import', importRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/inventory-plans', inventoryPlanRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

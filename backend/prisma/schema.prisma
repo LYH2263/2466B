@@ -27,6 +27,7 @@ model User {
   targetAuditLogs   AuditLog[]  @relation("TargetAuditLogs")
   healthConfig      HealthConfig?
   healthScores      HealthScore[]
+  dashboardLayout   DashboardLayout?
 
   @@map("users")
 }
@@ -233,4 +234,17 @@ model HealthScore {
   @@index([userId])
   @@index([userId, calculatedAt])
   @@map("health_scores")
+}
+
+model DashboardLayout {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  version   Int      @default(1)
+  layout    String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_layouts")
 }
