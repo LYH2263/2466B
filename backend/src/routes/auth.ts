@@ -89,6 +89,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: '邮箱或密码错误' });
     }
 
+    // Check if account is enabled
+    if (!user.enabled) {
+      return res.status(403).json({ error: '账号已被禁用，请联系管理员' });
+    }
+
     // Check if account is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const minutes = Math.ceil((user.lockedUntil.getTime() - Date.now()) / (1000 * 60));
@@ -161,7 +166,8 @@ router.post('/login', async (req, res) => {
       accessToken,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {
@@ -200,7 +206,8 @@ router.post('/refresh', async (req, res) => {
       accessToken,
       user: {
         id: storedToken.user.id,
-        email: storedToken.user.email
+        email: storedToken.user.email,
+        role: storedToken.user.role
       }
     });
   } catch (error) {
@@ -252,6 +259,7 @@ router.get('/me', async (req, res) => {
           id: true,
           email: true,
           role: true,
+          enabled: true,
           createdAt: true
         }
       });

@@ -61,8 +61,10 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, WalletFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const { setUser } = useAuth()
 const formRef = ref()
 const loading = ref(false)
 
@@ -98,8 +100,9 @@ const handleSubmit = async () => {
       withCredentials: true
     })
     
-    const { accessToken } = response.data
+    const { accessToken, user } = response.data
     localStorage.setItem('accessToken', accessToken)
+    setUser(user)
     
     ElMessage.success('登录成功')
     router.push('/')

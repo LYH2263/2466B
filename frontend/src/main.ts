@@ -8,24 +8,49 @@ import Login from './views/Login.vue'
 import Dashboard from './views/Dashboard.vue'
 import Transactions from './views/Transactions.vue'
 import Report from './views/Report.vue'
+import AdminPanel from './views/AdminPanel.vue'
+import { useAuth } from './composables/useAuth'
 
-// Route guard
-const requireAuth = (to: any, from: any, next: any) => {
+const requireAuth = async (_to: any, _from: any, next: any) => {
   const token = localStorage.getItem('accessToken')
-  if (token) {
-    next()
-  } else {
-    next('/login')
+  if (!token) {
+    return next('/login')
   }
+  const { fetchCurrentUser, isLoggedIn } = useAuth()
+  if (!isLoggedIn.value) {
+    await fetchCurrentUser()
+  }
+  if (!isLoggedIn.value) {
+    return next('/login')
+  }
+  next()
 }
 
-const requireGuest = (to: any, from: any, next: any) => {
+const requireGuest = (_to: any, _from: any, next: any) => {
   const token = localStorage.getItem('accessToken')
   if (token) {
     next('/')
   } else {
     next()
   }
+}
+
+const requireAdmin = async (_to: any, _from: any, next: any) => {
+  const token = localStorage.getItem('accessToken')
+  if (!token) {
+    return next('/login')
+  }
+  const { fetchCurrentUser, isAdmin, isLoggedIn } = useAuth()
+  if (!isLoggedIn.value) {
+    await fetchCurrentUser()
+  }
+  if (!isLoggedIn.value) {
+    return next('/login')
+  }
+  if (!isAdmin.value) {
+    return next('/')
+  }
+  next()
 }
 
 const routes = [
@@ -48,6 +73,11 @@ const routes = [
     path: '/reports',
     component: Report,
     beforeEnter: requireAuth
+  },
+  {
+    path: '/admin',
+    component: AdminPanel,
+    beforeEnter: requireAdmin
   }
 ]
 
@@ -58,7 +88,6 @@ const router = createRouter({
 
 const app = createApp(App)
 
-// Register all icons
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }

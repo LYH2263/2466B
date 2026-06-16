@@ -170,3 +170,52 @@ export interface ReportQuery {
   year: number
   month?: number
 }
+
+export interface CurrentUser {
+  id: string
+  email: string
+  role: 'user' | 'admin'
+  enabled?: boolean
+  createdAt?: string
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  role: 'user' | 'admin'
+  enabled: boolean
+  failedLoginCount: number
+  lockedUntil: string | null
+  isLocked: boolean
+  createdAt: string
+  assetRecordCount: number
+  transactionCount: number
+}
+
+export interface AdminPagination {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface UserListResponse {
+  users: AdminUser[]
+  pagination: AdminPagination
+}
+
+export type AuditAction = 'ENABLE_USER' | 'DISABLE_USER' | 'UNLOCK_USER' | 'CHANGE_ROLE' | 'FORCE_LOGOUT'
+
+export interface AuditLog {
+  id: string
+  adminEmail: string
+  targetUserEmail: string
+  action: AuditAction
+  detail: string | null
+  createdAt: string
+}
+
+export interface AuditLogResponse {
+  logs: AuditLog[]
+  pagination: AdminPagination
+}

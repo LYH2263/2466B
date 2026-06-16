@@ -28,10 +28,20 @@
           >
             资产报告
           </el-button>
+          <el-button
+            v-if="isAdmin"
+            type="warning"
+            plain
+            :icon="Setting"
+            @click="goToAdmin"
+          >
+            管理后台
+          </el-button>
         </div>
         
         <div class="header-actions">
           <div v-if="user" class="user-info">
+            <el-tag v-if="user.role === 'admin'" type="danger" size="small" effect="dark">管理员</el-tag>
             <span>{{ user.email }}</span>
             <el-button
               type="danger"
@@ -112,8 +122,9 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document } from '@element-plus/icons-vue'
+import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
+import { useAuth } from '../composables/useAuth'
 import type { AssetFormData } from '../types'
 import axios from 'axios'
 import AssetSummary from '../components/AssetSummary.vue'
@@ -123,19 +134,16 @@ import AssetList from '../components/AssetList.vue'
 
 const router = useRouter()
 const { records, latestRecord, chartData, hasRecords, loading, error, fetchRecords, addRecord, deleteRecord, fillDemoData } = useAssets()
+const { currentUser: authUser, isAdmin, fetchCurrentUser, clearUser } = useAuth()
 
-const user = ref<{ id: string; email: string } | null>(null)
+const user = ref<{ id: string; email: string; role?: string } | null>(null)
 
 const fetchUser = async () => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
-    const token = localStorage.getItem('accessToken')
-    
-    const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    
-    user.value = response.data.user
+    const fetched = await fetchCurrentUser()
+    if (fetched) {
+      user.value = fetched
+    }
   } catch (err) {
     // User not logged in, router guard will handle redirect
   }
@@ -207,6 +215,10 @@ const goToReports = () => {
   router.push('/reports')
 }
 
+const goToAdmin = () => {
+  router.push('/admin')
+}
+
 const handleLogout = async () => {
   try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
@@ -215,11 +227,11 @@ const handleLogout = async () => {
       withCredentials: true
     })
     
-    localStorage.removeItem('accessToken')
+    clearUser()
     ElMessage.success('已退出登录')
     router.push('/login')
   } catch (err) {
-    localStorage.removeItem('accessToken')
+    clearUser()
     router.push('/login')
   }
 }
