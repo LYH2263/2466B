@@ -1,6 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- Header -->
     <header class="app-header">
       <div class="header-content">
         <div class="logo">
@@ -38,7 +37,7 @@
             管理后台
           </el-button>
         </div>
-        
+
         <div class="header-actions">
           <NotificationCenter />
           <div v-if="user" class="user-info">
@@ -73,12 +72,11 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="main-content">
       <div v-if="loading" class="loading-state">
         <el-skeleton :rows="10" animated />
       </div>
-      
+
       <div v-else-if="error" class="error-state">
         <el-alert
           :title="error"
@@ -91,24 +89,33 @@
           </template>
         </el-alert>
       </div>
-      
+
       <template v-else>
-        <!-- Summary Cards -->
         <AssetSummary :latest-record="latestRecord" />
 
-        <!-- Input Form -->
         <AssetForm
           @submit="handleSubmit"
           @fill-demo="handleFillDemo"
         />
 
-        <!-- Chart -->
         <AssetChart
           :chart-data="chartData"
+          :prediction="predictionResult"
           @fill-demo="handleFillDemo"
         />
 
-        <!-- List -->
+        <PredictionPanel
+          :params="predictionParams"
+          :result="predictionResult"
+          :loading="predictionLoading"
+          :error="predictionError"
+          :chart-data="chartData"
+          :refresh="handleRefreshPrediction"
+          :on-change-algorithm="handleChangeAlgorithm"
+          :on-change-months="handleChangeMonths"
+          :on-change-target="handleChangeTarget"
+        />
+
         <AssetList
           :records="records"
           @delete="handleDelete"
@@ -120,25 +127,38 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { WalletFilled, DataLine, DeleteFilled, SwitchButton, List, Document, Setting } from '@element-plus/icons-vue'
 import { useAssets } from '../composables/useAssets'
 import { useAuth } from '../composables/useAuth'
-import type { AssetFormData } from '../types'
+import { usePrediction } from '../composables/usePrediction'
+import type { AssetFormData, PredictionAlgorithm } from '../types'
 import axios from 'axios'
 import AssetSummary from '../components/AssetSummary.vue'
 import AssetForm from '../components/AssetForm.vue'
 import AssetChart from '../components/AssetChart.vue'
 import AssetList from '../components/AssetList.vue'
 import NotificationCenter from '../components/NotificationCenter.vue'
+import PredictionPanel from '../components/PredictionPanel.vue'
 
 const router = useRouter()
 const { records, latestRecord, chartData, hasRecords, loading, error, fetchRecords, addRecord, deleteRecord, fillDemoData } = useAssets()
 const { currentUser: authUser, isAdmin, fetchCurrentUser, clearUser } = useAuth()
 
 const user = ref<{ id: string; email: string; role?: string } | null>(null)
+
+const {
+  params: predictionParams,
+  result: predictionResult,
+  loading: predictionLoading,
+  error: predictionError,
+  fetchPrediction,
+  setAlgorithm,
+  setMonthsAhead,
+  setTargetAmount,
+} = usePrediction({ monthsAhead: 12 })
 
 const fetchUser = async () => {
   try {
@@ -147,7 +167,6 @@ const fetchUser = async () => {
       user.value = fetched
     }
   } catch (err) {
-    // User not logged in, router guard will handle redirect
   }
 }
 
@@ -174,7 +193,6 @@ const handleDelete = async (id: string) => {
     await deleteRecord(id)
     ElMessage.success('删除成功')
   } catch (err) {
-    // Cancelled
   }
 }
 
@@ -198,14 +216,12 @@ const handleClearAll = async () => {
         type: 'danger'
       }
     )
-    
-    // Delete all records one by one
+
     for (const record of records.value) {
       await deleteRecord(record.id)
     }
     ElMessage.success('数据已清空')
   } catch (err) {
-    // Cancelled
   }
 }
 
@@ -224,11 +240,11 @@ const goToAdmin = () => {
 const handleLogout = async () => {
   try {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
-    
+
     await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, {
       withCredentials: true
     })
-    
+
     clearUser()
     ElMessage.success('已退出登录')
     router.push('/login')
@@ -237,6 +253,32 @@ const handleLogout = async () => {
     router.push('/login')
   }
 }
+
+const handleRefreshPrediction = async () => {
+  await fetchPrediction()
+}
+
+const handleChangeAlgorithm = (algo: PredictionAlgorithm) => {
+  setAlgorithm(algo)
+}
+
+const handleChangeMonths = (m: number) => {
+  setMonthsAhead(m)
+}
+
+const handleChangeTarget = (t: number | undefined) => {
+  setTargetAmount(t)
+}
+
+watch(
+  () => [chartData.value.length, hasRecords.value],
+  async () => {
+    if (hasRecords.value && chartData.value.length >= 3) {
+      await fetchPrediction()
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   fetchUser()

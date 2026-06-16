@@ -246,3 +246,42 @@ export interface NotificationListResponse {
   notifications: Notification[]
   pagination: NotificationPagination
 }
+
+export type PredictionAlgorithm = 'linear' | 'movingAverage' | 'exponentialSmoothing'
+
+export interface ProcessedDataPoint {
+  date: string
+  timestamp: number
+  total: number
+  isOutlier: boolean
+}
+
+export interface PredictionPoint {
+  date: string
+  value: number
+  lower: number
+  upper: number
+}
+
+export interface PredictionResult {
+  canPredict: boolean
+  message?: string
+  algorithm: PredictionAlgorithm
+  processedData: ProcessedDataPoint[]
+  predictions: PredictionPoint[]
+  targetReachDate?: string
+  targetReachMonths?: number
+  monthlyGrowthRate?: number
+  metrics: {
+    slope: number
+    intercept: number
+    rSquared?: number
+    confidenceLevel: number
+  }
+}
+
+export interface PredictionParams {
+  algorithm: PredictionAlgorithm
+  monthsAhead: number
+  targetAmount?: number
+}
